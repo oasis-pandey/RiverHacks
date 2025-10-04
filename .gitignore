@@ -1,0 +1,46 @@
+# Ignore EVERYTHING by default
+*
+
+# ==========================
+# ✅ Allow only essential project files
+# ==========================
+
+# Keep gitignore itself
+!.gitignore
+
+# Keep Python source
+!*.py
+
+# Keep configuration and requirements
+!requirements.txt
+!setup.py
+!config.py
+
+# Keep documentation
+!*.md
+!docs/
+!README.md
+
+# Keep your engine and main project folders
+!bio_knowledge_engine/
+!engine/
+!RiverHacks/
+!test.py
+
+# ==========================
+# 🚫 Still ignore heavy or sensitive stuff inside allowed folders
+# ==========================
+# Ignore virtual environments, data, and outputs
+venv/
+.env/
+*.pdf
+*.txt
+*.log
+*.csv
+*.tmp
+__pycache__/
+.cache/
+*.json
+
+# If you only want final JSONs tracked, comment out the line above and use:
+# !data/json/
