@@ -1,191 +1,112 @@
-# 🧠 SerpAPI Research Pipeline Module
-**Author:** Sinan Demir  
-**Date:** 2025-10-05  
-**Project:** NASA Space Biology Knowledge Engine – RiverHacks
+# Bio Knowledge Engine — SerpAPI Integration
+
+## 📘 Overview
+This module integrates **SerpAPI (Google Scholar)** search capabilities into the Bio Knowledge Engine. It fetches academic papers, extracts PDFs, and formats them into structured JSON for downstream AI or RAG (Retrieval-Augmented Generation) systems.
 
 ---
 
-## 🧩 Overview
-
-This module provides a **Python-based pipeline** to fetch academic research papers from **Google Scholar** using the [SerpAPI](https://serpapi.com/) service, automatically download **open-access PDFs**, extract their full text, and store the results in a structured format ready for further AI processing (e.g., embeddings or vector search).
-
-It acts as the **data ingestion layer** for the team’s “Space Biology Knowledge Engine”.
-
----
-
-## ⚙️ Folder Structure
-
+## 📁 Folder Structure
 ```
 bio_knowledge_engine/
 │
-├── config.py                  # Loads API keys from .env
-├── __init__.py
-└── search/
-    ├── __init__.py
-    └── serpapi_client.py      # Core logic for SerpAPI + PDF extraction
-
-data/
-├── pdfs/                      # Extracted open-access paper text (auto-generated)
-└── json/                      # Combined metadata and summaries (auto-generated)
-
-test.py                        # Runs the pipeline
-requirements.txt               # Dependencies
-.gitignore                     # Keeps repo clean
+├── config.py                  # Stores API key or loads from .env
+├── search/
+│   ├── serpapi_client.py      # Handles Google Scholar API calls & PDF extraction
+│   ├── __init__.py
+│
+├── outputs/
+│   ├── pdfs/                  # Saved PDFs
+│   ├── json/                  # Final structured JSON results
+│
+├── test.py                    # Example test runner
+└── requirements.txt
 ```
 
 ---
 
-## 🚀 Setup & Usage
+## ⚙️ Installation
 
-### 1. Clone the repository
-```bash
-git clone <repo-url>
-cd RiverHacks
-```
-
-### 2. Create and activate a virtual environment
-```bash
-python -m venv venv
-.env\Scriptsctivate     # on Windows
-# OR
-source venv/bin/activate    # on macOS/Linux
-```
-
-### 3. Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Set up your SerpAPI key
-Option 1: Temporary (PowerShell)
-```bash
-$env:SERPAPI_KEY = "your_real_serpapi_key_here"
+Ensure you have a **SerpAPI key** set:
+- Option 1: in `.env`
+- Option 2: inside `bio_knowledge_engine/config.py`
+- Option 3: plain text file `api_key.txt`
+
+Example for `.env`:
 ```
-
-Option 2: Permanent (recommended)
-Create a `.env` file in your root directory:
-```
-SERPAPI_KEY=your_real_serpapi_key_here
-```
-
----
-
-## 🧩 How It Works
-
-1. **Fetch data from SerpAPI (Google Scholar)**
-   - Uses the official `serpapi` library.
-   - Queries biology or space-related topics.
-   - Collects titles, links, snippets, and publication info.
-
-2. **Detect & download PDFs**
-   - Identifies open-access papers (via `resources` → `file_format == PDF`).
-   - Downloads the PDF with `requests`.
-
-3. **Extract readable text**
-   - Converts PDF pages into text using `PyMuPDF (fitz)`.
-
-4. **Save and structure results**
-   - Saves extracted text files under `/data/pdfs/`.
-   - Creates a JSON summary file under `/data/json/`.
-
----
-
-## 🧠 Example Usage
-
-### Run the Test Script
-```bash
-python test.py
-```
-
-Example console output:
-```
-✅ SERPAPI_KEY detected. Starting test...
-
-🧠 Result 1: Overview of the NASA Microgravity Combustion Program
-🔗 https://arc.aiaa.org/doi/pdf/10.2514/2.531
-📄 Extracted PDF text (134,872 chars)
-✅ Saved PDF text to data/pdfs/paper_1.txt
-```
-
-Generated JSON file:
-```
-data/json/microgravity_results.json
+SERPAPI_KEY=your_serpapi_api_key_here
 ```
 
 ---
 
-## 📁 Example JSON Output
+## 🧭 Usage Guide
 
+### 1. Import & Use in Python
+
+```python
+from bio_knowledge_engine.search.serpapi_client import get_structured_scholar_data
+
+query = "microgravity effects on cell biology"
+data = get_structured_scholar_data(query)
+
+# Save output to JSON
+import json
+with open("papers.json", "w", encoding="utf-8") as f:
+    json.dump(data, f, ensure_ascii=False, indent=2)
+```
+
+### 2. Example Output
 ```json
-{
-  "title": "Overview of the NASA microgravity combustion program",
-  "link": "https://arc.aiaa.org/doi/pdf/10.2514/2.531",
-  "snippet": "… overview of NASA microgravity combustion …",
-  "publication_info": "MK King, HD Ross - AIAA journal, 1998 - arc.aiaa.org",
-  "pdf_path": "data/pdfs/paper_1.txt",
-  "summary": "Combustion experiments in microgravity...",
-  "pdf_preview": "AIAA JOURNAL Vol. 36, No. 8..."
-}
+[
+  {
+    "title": "Modeling the impact of microgravity at the cellular level",
+    "link": "https://www.frontiersin.org/articles/10.3389/fcell.2020.00096/full",
+    "authors": "P Bradbury, H Wu, JU Choi, AE Rowan…",
+    "paragraphs": [
+      "Humans are subjected to persistent gravitational force...",
+      "During space flight, astronauts are exposed to microgravity...",
+      "This review will discuss recent data..."
+    ]
+  }
+]
 ```
 
----
+### 3. Command-Line Use (Optional)
+You can run the script directly:
 
-## 🧩 Function Reference
-
-### `fetch_scholar_results(query: str, num_results: int = 5) -> list[dict]`
-Fetches academic results from Google Scholar using SerpAPI.
-
-**Args:**
-- `query`: Search term (e.g., `"microgravity biology NASA"`)
-- `num_results`: Number of results to retrieve
-
-**Returns:**
-List of dictionaries with:
-- `title`
-- `link`
-- `snippet`
-- `publication_info`
-- `pdf_text` (if available)
-
----
-
-## ⚙️ Dependencies
-
-All dependencies are listed in `requirements.txt`:
-
-```
-serpapi
-PyMuPDF
-requests
-python-dotenv
-```
-
-Install with:
 ```bash
-pip install -r requirements.txt
+python run_scholar.py "microgravity effects on cell biology"
 ```
 
----
-
-## 🧭 Future Extensions
-
-- Integrate **FAISS** or **Chroma** for semantic search
-- Build a **Flask/FastAPI** endpoint for team chatbot access
-- Add automated query refresh scheduling
-- Implement vector embeddings with OpenAI API
+This creates `output.json` inside your working directory.
 
 ---
 
-## 👥 Team Notes
+## 🧠 RAG Integration Example
 
-- **Do not commit `/data/` or `venv/` folders.**
-- Make sure `.env` and `.gitignore` are set correctly.
-- For debugging, run:
-  ```bash
-  python -i test.py
-  ```
-  and explore results interactively.
+Your RAG teammates can easily integrate the structured JSON into a vector store using LangChain.
+
+```python
+from langchain_community.document_loaders import JSONLoader
+
+loader = JSONLoader(file_path="papers.json", jq_schema=".[]", text_content=False)
+docs = loader.load()
+```
+
+Then they can embed the documents and pass them into a retriever for Q&A.
 
 ---
 
-*Maintained by Sinan Demir*
+## 🧩 Troubleshooting
+
+- **403 Forbidden** → The PDF may be blocked by the host site. Only open-access files can be fetched.
+- **Missing SERPAPI_KEY** → Check your `.env` or `config.py`.
+- **PyMuPDF ImportError** → Ensure you install the correct library: `pip install PyMuPDF`, **not** `fitz`.
+
+---
+
+## 👨‍💻 Authors
+**Sinan Demir** — RiverHacks Project, 2025
