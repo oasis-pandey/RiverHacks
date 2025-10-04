@@ -23,6 +23,7 @@
 
 # Keep your engine and main project folders
 !bio_knowledge_engine/
+!bio_knowledge_engine/search/
 !engine/
 !RiverHacks/
 !test.py
