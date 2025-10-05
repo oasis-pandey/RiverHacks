@@ -38,6 +38,7 @@
 !server/
 !server/core
 !server/api
+!scripts/
 
 # ==========================
 # 🚫 Still ignore heavy or sensitive stuff inside allowed folders
