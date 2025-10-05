@@ -3,8 +3,13 @@
 import os
 import subprocess
 from pathlib import Path
+import argparse
 
 def main():
+    parser = argparse.ArgumentParser(description="NASA Publication Scraper Controller")
+    parser.add_argument("--no-pause", action="store_true", help="Do not pause at the end; useful for CI")
+    args = parser.parse_args()
+
     print("🚀 NASA Publication Scraper")
     print("=" * 40)
     print("1. Test scrape (10 entries)")
@@ -20,7 +25,23 @@ def main():
     project_root = Path(__file__).parent
     scripts_dir = project_root / "scripts"
     data_dir = project_root / "data"
-    python_exe = project_root.parent / ".venv" / "bin" / "python"
+    # Prefer a project-local venv (scraper/.venv), fall back to repo-level .venv, then to current Python
+    import sys
+    candidate_venvs = [
+        project_root / ".venv" / "bin" / "python",
+        project_root.parent / ".venv" / "bin" / "python",
+        Path(sys.executable)
+    ]
+    python_exe = None
+    for p in candidate_venvs:
+        try:
+            if p and p.exists() and os.access(p, os.X_OK):
+                python_exe = p
+                break
+        except Exception:
+            continue
+    if python_exe is None:
+        python_exe = Path(sys.executable)
     
     data_dir.mkdir(exist_ok=True)
     
@@ -57,7 +78,11 @@ def main():
         return
         
     if choice in ["1", "2", "3"]:
-        input("\nPress Enter to continue...")
+        if not args.no_pause:
+            try:
+                input("\nPress Enter to continue...")
+            except EOFError:
+                pass
         main()
 
 if __name__ == "__main__":
