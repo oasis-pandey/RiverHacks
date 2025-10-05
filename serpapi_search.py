@@ -8,8 +8,8 @@ import requests
 from serpapi import GoogleSearch
 import os
 
-#SERPAPI_KEY = os.getenv("SERPAPI_KEY")
-SERPAPI_KEY = '13dffb7b66530a24e779e9f2bb5d0f8d7217d07b33790de152d1819a95af9486'
+SERPAPI_KEY = os.getenv("SERPAPI_KEY")
+
 
 
 def fetch_scholar_results(query: str, num_results: int = 5):
