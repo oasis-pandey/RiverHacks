@@ -1,26 +1,27 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sparkles, User } from "lucide-react"
 import type { Message } from "@/lib/db"
 import { cn } from "@/lib/utils"
+import { Skeleton } from "@/components/ui/skeleton"
 
 type ChatMessagesProps = {
   messages: Message[]
   conversationTitle?: string
+  assistantTyping?: boolean
 }
 
-export function ChatMessages({ messages, conversationTitle }: ChatMessagesProps) {
+export function ChatMessages({ messages, conversationTitle, assistantTyping = false }: ChatMessagesProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })
     }
   }, [messages])
 
-  if (messages.length === 0) {
+  if (messages.length === 0 && !assistantTyping) {
     return (
       <div className="flex flex-1 items-center justify-center p-8">
         <div className="text-center">
@@ -35,7 +36,7 @@ export function ChatMessages({ messages, conversationTitle }: ChatMessagesProps)
   }
 
   return (
-    <ScrollArea className="flex-1 p-6" ref={scrollRef}>
+    <div ref={scrollRef} className="custom-scroll flex-1 overflow-y-auto p-6">
       <div className="mx-auto max-w-3xl space-y-6">
         {messages.map((message) => (
           <div key={message.id} className={cn("flex gap-4", message.role === "user" ? "justify-end" : "justify-start")}>
@@ -63,7 +64,26 @@ export function ChatMessages({ messages, conversationTitle }: ChatMessagesProps)
             )}
           </div>
         ))}
+
+        {assistantTyping && (
+          <div className="flex gap-4">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+              <Sparkles className="h-4 w-4 text-primary" />
+            </div>
+            <div className="flex max-w-[80%] items-center gap-3 rounded-lg border border-border bg-muted px-4 py-3">
+              <div className="typing-indicator">
+                {[0, 1, 2].map((dot) => (
+                  <Skeleton
+                    key={dot}
+                    className="typing-dot !animate-[typing-bounce_1.2s_ease-in-out_infinite]"
+                    style={{ animationDelay: `${dot * 0.15}s` }}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    </ScrollArea>
+    </div>
   )
 }

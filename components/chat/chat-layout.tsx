@@ -22,6 +22,7 @@ type ChatLayoutProps = {
 export function ChatLayout({ user, initialConversations, currentConversation, initialMessages = [] }: ChatLayoutProps) {
   const [conversations, setConversations] = useState(initialConversations)
   const [messages, setMessages] = useState(initialMessages)
+  const [assistantTyping, setAssistantTyping] = useState(false)
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -33,11 +34,16 @@ export function ChatLayout({ user, initialConversations, currentConversation, in
       />
 
       <div className="flex flex-1 flex-col">
-        <ChatMessages messages={messages} conversationTitle={currentConversation?.title} />
+        <ChatMessages
+          messages={messages}
+          conversationTitle={currentConversation?.title}
+          assistantTyping={assistantTyping}
+        />
         <ChatInput
           conversationId={currentConversation?.id}
           onMessagesChange={setMessages}
           onConversationsChange={setConversations}
+          onAssistantTypingChange={setAssistantTyping}
         />
       </div>
     </div>

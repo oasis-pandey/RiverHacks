@@ -1,7 +1,8 @@
+import Link from "next/link"
+import { ArrowRight, Sparkles, Brain, Rocket } from "lucide-react"
+
 import { SpaceScene } from "@/components/space-scene"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Sparkles, Brain, Rocket } from "lucide-react"
-import Link from "next/link"
 
 export default function LandingPage() {
   return (
@@ -9,24 +10,7 @@ export default function LandingPage() {
       <SpaceScene />
 
       <div className="relative z-10">
-        <nav className="flex items-center justify-between px-6 py-6 lg:px-12">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-primary" />
-            <span className="font-mono text-xl font-bold">SpaceBio</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/auth/signin">
-              <Button variant="ghost" className="text-foreground">
-                Sign In
-              </Button>
-            </Link>
-            <Link href="/auth/signup">
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">Get Started</Button>
-            </Link>
-          </div>
-        </nav>
-
-        <div className="container mx-auto px-6 py-20 lg:py-32">
+        <div className="container mx-auto px-6 pb-20 pt-16 lg:pb-32 lg:pt-24">
           <div className="mx-auto max-w-4xl text-center">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm text-primary">
               <Sparkles className="h-4 w-4" />

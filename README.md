@@ -28,3 +28,11 @@ Continue building your app on:
 2. Deploy your chats from the v0 interface
 3. Changes are automatically pushed to this repository
 4. Vercel deploys the latest version from this repository
+
+## Environment configuration
+
+Set the following variables when running locally or deploying:
+
+- `GEMINI_API_KEY` – required Google AI Studio key with access to Gemini 1.5 models.
+- `GEMINI_API_MODEL` – optional override for the REST model path (defaults to `gemini-1.5-flash-latest`).
+- `GEMINI_API_VERSION` – optional override for the API version segment (defaults to `v1beta`).

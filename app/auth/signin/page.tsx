@@ -5,18 +5,11 @@ import Link from "next/link"
 
 export default function SignInPage() {
   return (
-    <main className="relative min-h-screen overflow-hidden">
+    <div className="relative min-h-full overflow-hidden">
       <SpaceScene />
 
-      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6">
-        <div className="mb-8 text-center">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <Sparkles className="h-8 w-8 text-primary" />
-            <span className="font-mono text-2xl font-bold">SpaceBio</span>
-          </Link>
-        </div>
-
-        <div className="w-full max-w-md rounded-xl border border-border bg-card/80 p-8 backdrop-blur-sm">
+      <div className="relative z-10 flex min-h-full flex-col items-center justify-center px-6 py-24">
+        <div className="w-full max-w-md rounded-xl border border-border bg-card/80 p-8 backdrop-blur-sm shadow-lg">
           <div className="mb-6 text-center">
             <h1 className="mb-2 text-3xl font-bold text-card-foreground">Welcome Back</h1>
             <p className="text-muted-foreground">Sign in to continue your space biology journey</p>
@@ -32,6 +25,6 @@ export default function SignInPage() {
           </p>
         </div>
       </div>
-    </main>
+    </div>
   )
 }

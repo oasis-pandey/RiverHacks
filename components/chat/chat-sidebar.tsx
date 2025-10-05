@@ -5,12 +5,12 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sparkles, Plus, MessageSquare, Trash2, LogOut } from "lucide-react"
 import { createConversation, deleteConversation } from "@/lib/conversations"
 import { signOut } from "@/lib/auth"
 import type { Conversation } from "@/lib/db"
 import { cn } from "@/lib/utils"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 type User = {
   id: string
@@ -32,8 +32,17 @@ export function ChatSidebar({ user, conversations, currentConversationId, onConv
   async function handleNewChat() {
     setLoading(true)
     const conversation = await createConversation("New Conversation")
-    onConversationsChange([conversation, ...conversations])
-    router.push(`/chat/${conversation.id}`)
+    if (
+      conversation &&
+      typeof conversation.id === "string" &&
+      typeof conversation.user_id === "string" &&
+      typeof conversation.title === "string" &&
+      conversation.created_at &&
+      conversation.updated_at
+    ) {
+      onConversationsChange([conversation as Conversation, ...conversations])
+      router.push(`/chat/${conversation.id}`)
+    }
     setLoading(false)
   }
 
@@ -53,6 +62,7 @@ export function ChatSidebar({ user, conversations, currentConversationId, onConv
           <Sparkles className="h-5 w-5 text-sidebar-primary" />
           <span className="font-mono text-lg font-bold text-sidebar-foreground">SpaceBio</span>
         </div>
+        <ThemeToggle className="border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/60" />
       </div>
 
       <div className="p-4">
@@ -66,10 +76,10 @@ export function ChatSidebar({ user, conversations, currentConversationId, onConv
         </Button>
       </div>
 
-      <ScrollArea className="flex-1 px-4">
-        <div className="space-y-2">
+      <div className="custom-scroll flex-1 overflow-y-auto px-4">
+        <div className="space-y-2 pb-4">
           {conversations.map((conversation) => (
-            <button
+            <div
               key={conversation.id}
               onClick={() => router.push(`/chat/${conversation.id}`)}
               className={cn(
@@ -89,10 +99,10 @@ export function ChatSidebar({ user, conversations, currentConversationId, onConv
               >
                 <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
               </button>
-            </button>
+            </div>
           ))}
         </div>
-      </ScrollArea>
+      </div>
 
       <div className="border-t border-sidebar-border p-4">
         <div className="mb-3 flex items-center gap-2 text-sm text-sidebar-foreground">

@@ -12,11 +12,12 @@ import type { Conversation, Message } from "@/lib/db"
 
 type ChatInputProps = {
   conversationId?: string
-  onMessagesChange: (messages: Message[]) => void
+  onMessagesChange: (updater: Message[] | ((prev: Message[]) => Message[])) => void
   onConversationsChange: (conversations: Conversation[]) => void
+  onAssistantTypingChange?: (isTyping: boolean) => void
 }
 
-export function ChatInput({ conversationId, onMessagesChange, onConversationsChange }: ChatInputProps) {
+export function ChatInput({ conversationId, onMessagesChange, onConversationsChange, onAssistantTypingChange }: ChatInputProps) {
   const router = useRouter()
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
@@ -28,21 +29,22 @@ export function ChatInput({ conversationId, onMessagesChange, onConversationsCha
     setLoading(true)
     const userMessage = input.trim()
     setInput("")
+  onAssistantTypingChange?.(true)
 
     try {
       let currentConversationId = conversationId
 
       // Create new conversation if none exists
       if (!currentConversationId) {
-        const conversation = await createConversation(userMessage.slice(0, 50))
+        const conversation = await createConversation(userMessage.slice(0, 50)) as Conversation
         currentConversationId = conversation.id
         onConversationsChange([conversation])
         router.push(`/chat/${conversation.id}`)
       }
 
-      // Save user message
-      const userMsg = await createMessage(currentConversationId, "user", userMessage)
-      onMessagesChange((prev) => [...prev, userMsg])
+      // Save user message (at this point currentConversationId is guaranteed to be defined)
+      const userMsg = await createMessage(currentConversationId!, "user", userMessage) as Message
+      onMessagesChange((prev: Message[]) => [...prev, userMsg])
 
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -66,25 +68,19 @@ export function ChatInput({ conversationId, onMessagesChange, onConversationsCha
           if (done) break
 
           const chunk = decoder.decode(value)
-          const lines = chunk.split("\n").filter((line) => line.trim() !== "")
-
-          for (const line of lines) {
-            if (line.startsWith("0:")) {
-              const text = line.slice(2).replace(/^"|"$/g, "")
-              assistantResponse += text
-            }
-          }
+          assistantResponse += chunk
         }
       }
 
       // Save assistant message
-      const assistantMsg = await createMessage(currentConversationId, "assistant", assistantResponse)
-      onMessagesChange((prev) => [...prev, assistantMsg])
+      const assistantMsg = await createMessage(currentConversationId!, "assistant", assistantResponse) as Message
+      onMessagesChange((prev: Message[]) => [...prev, assistantMsg])
     } catch (error) {
       console.error("[v0] Chat error:", error)
       alert("Failed to get response. Please try again.")
     } finally {
       setLoading(false)
+      onAssistantTypingChange?.(false)
     }
   }
 
