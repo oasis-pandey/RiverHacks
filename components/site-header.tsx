@@ -11,7 +11,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 const navigation = [
   { name: "Home", href: "/" },
   { name: "Chat", href: "/chat" },
-  { name: "Search", href: "#features" },
+  { name: "Search", href: "/search" },
 ]
 
 export function SiteHeader() {

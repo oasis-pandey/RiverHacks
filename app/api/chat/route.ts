@@ -68,44 +68,68 @@ export async function POST(request: NextRequest) {
     // Stream the response
     const stream = new ReadableStream({
       async start(controller) {
-        try {
-          const reader = geminiResponse.body?.getReader()
-          const decoder = new TextDecoder()
+        const reader = geminiResponse.body?.getReader()
+        const decoder = new TextDecoder()
+        const encoder = new TextEncoder()
+        let buffer = ""
 
-          if (!reader) {
-            throw new Error("No response body")
+        if (!reader) {
+          controller.error(new Error("No response body"))
+          return
+        }
+
+        const processBuffer = () => {
+          let newlineIndex = buffer.indexOf("\n")
+
+          while (newlineIndex !== -1) {
+            const rawLine = buffer.slice(0, newlineIndex)
+            buffer = buffer.slice(newlineIndex + 1)
+            const line = rawLine.replace(/\r$/, "").trim()
+
+            if (!line || line.startsWith(":")) {
+              newlineIndex = buffer.indexOf("\n")
+              continue
+            }
+
+            if (line.startsWith("data: ")) {
+              const data = line.slice(6).trim()
+              if (!data || data === "[DONE]") {
+                newlineIndex = buffer.indexOf("\n")
+                continue
+              }
+
+              try {
+                const parsed = JSON.parse(data)
+                const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text
+                if (text) {
+                  controller.enqueue(encoder.encode(text))
+                }
+              } catch (parseError) {
+                console.warn("[v0] Unable to parse Gemini stream chunk", parseError)
+              }
+            }
+
+            newlineIndex = buffer.indexOf("\n")
           }
+        }
 
+        try {
           while (true) {
             const { done, value } = await reader.read()
             if (done) break
 
-            const chunk = decoder.decode(value, { stream: true })
-            const lines = chunk.split('\n')
-
-            for (const line of lines) {
-              if (line.startsWith('data: ')) {
-                const data = line.slice(6)
-                if (data === '[DONE]') continue
-                
-                try {
-                  const parsed = JSON.parse(data)
-                  const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text
-                  if (text) {
-                    controller.enqueue(new TextEncoder().encode(text))
-                  }
-                } catch (e) {
-                  // Skip invalid JSON
-                }
-              }
-            }
+            buffer += decoder.decode(value, { stream: true })
+            processBuffer()
           }
+
+          buffer += decoder.decode()
+          processBuffer()
           controller.close()
         } catch (error) {
           console.error("[v0] Stream error:", error)
           controller.error(error)
         }
-      }
+      },
     })
 
     return new Response(stream, {

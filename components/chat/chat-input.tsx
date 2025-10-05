@@ -29,10 +29,13 @@ export function ChatInput({ conversationId, onMessagesChange, onConversationsCha
     setLoading(true)
     const userMessage = input.trim()
     setInput("")
-  onAssistantTypingChange?.(true)
+    onAssistantTypingChange?.(true)
+
+    let tempAssistantId: string | null = null
 
     try {
       let currentConversationId = conversationId
+      let assistantResponse = ""
 
       // Create new conversation if none exists
       if (!currentConversationId) {
@@ -60,24 +63,54 @@ export function ChatInput({ conversationId, onMessagesChange, onConversationsCha
 
       const reader = response.body?.getReader()
       const decoder = new TextDecoder()
-      let assistantResponse = ""
 
       if (reader) {
+        tempAssistantId = `temp-${typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : Math.random().toString(36).slice(2)}`
+        const placeholder: Message = {
+          id: tempAssistantId,
+          conversation_id: currentConversationId!,
+          role: "assistant",
+          content: "",
+          created_at: new Date().toISOString(),
+        }
+
+        onMessagesChange((prev: Message[]) => [...prev, placeholder])
+
         while (true) {
           const { done, value } = await reader.read()
           if (done) break
 
-          const chunk = decoder.decode(value)
+          const chunk = decoder.decode(value, { stream: true })
           assistantResponse += chunk
+
+          const latestContent = assistantResponse
+          onMessagesChange((prev: Message[]) =>
+            prev.map((message) =>
+              message.id === tempAssistantId ? { ...message, content: latestContent } : message,
+            ),
+          )
         }
+      } else {
+        throw new Error("Streaming not supported")
       }
 
       // Save assistant message
       const assistantMsg = await createMessage(currentConversationId!, "assistant", assistantResponse) as Message
-      onMessagesChange((prev: Message[]) => [...prev, assistantMsg])
+      const placeholderId = tempAssistantId
+      if (placeholderId) {
+        onMessagesChange((prev: Message[]) =>
+          prev.map((message) => (message.id === placeholderId ? assistantMsg : message)),
+        )
+      } else {
+        onMessagesChange((prev: Message[]) => [...prev, assistantMsg])
+      }
+      tempAssistantId = null
     } catch (error) {
       console.error("[v0] Chat error:", error)
       alert("Failed to get response. Please try again.")
+      if (tempAssistantId) {
+        onMessagesChange((prev: Message[]) => prev.filter((message) => message.id !== tempAssistantId))
+      }
     } finally {
       setLoading(false)
       onAssistantTypingChange?.(false)

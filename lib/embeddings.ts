@@ -34,11 +34,35 @@ export async function storeMessageEmbedding(messageId: string, embedding: number
   `
 }
 
+type SemanticSearchOptions = {
+  limit?: number
+  page?: number
+  similarityThreshold?: number
+  conversationId?: string
+  role?: "user" | "assistant" | "system"
+  sort?: "similarity" | "recent"
+}
+
 /**
  * Perform semantic search across user's messages
  */
-export async function semanticSearch(userId: string, queryEmbedding: number[], limit = 5, similarityThreshold = 0.7) {
+export async function semanticSearch(userId: string, queryEmbedding: number[], options: SemanticSearchOptions = {}) {
+  const {
+    limit = 10,
+    page = 1,
+    similarityThreshold = 0.7,
+    conversationId,
+    role,
+    sort = "similarity",
+  } = options
+
+  const offset = Math.max(page - 1, 0) * limit
   const embeddingStr = `[${queryEmbedding.join(",")}]`
+
+  const conversationFilter = conversationId ? sql`AND m.conversation_id = ${conversationId}` : sql``
+  const roleFilter = role ? sql`AND m.role = ${role}` : sql``
+  const orderByClause =
+    sort === "recent" ? sql`ORDER BY m.created_at DESC` : sql`ORDER BY me.embedding <=> ${embeddingStr}::vector`
 
   const results = await sql`
     SELECT 
@@ -53,10 +77,28 @@ export async function semanticSearch(userId: string, queryEmbedding: number[], l
     JOIN messages m ON me.message_id = m.id
     JOIN conversations c ON m.conversation_id = c.id
     WHERE c.user_id = ${userId}
-      AND 1 - (me.embedding <=> ${embeddingStr}::vector) > ${similarityThreshold}
-    ORDER BY me.embedding <=> ${embeddingStr}::vector
-    LIMIT ${limit}
+      ${conversationFilter}
+      ${roleFilter}
+      AND 1 - (me.embedding <=> ${embeddingStr}::vector) >= ${similarityThreshold}
+    ${orderByClause}
+    LIMIT ${limit} OFFSET ${offset}
   `
 
-  return results
+  const totalResult = await sql`
+    SELECT COUNT(*)::int AS total
+    FROM message_embeddings me
+    JOIN messages m ON me.message_id = m.id
+    JOIN conversations c ON m.conversation_id = c.id
+    WHERE c.user_id = ${userId}
+      ${conversationFilter}
+      ${roleFilter}
+      AND 1 - (me.embedding <=> ${embeddingStr}::vector) >= ${similarityThreshold}
+  `
+
+  const total = totalResult[0]?.total ? Number(totalResult[0].total) : 0
+
+  return {
+    results,
+    total,
+  }
 }

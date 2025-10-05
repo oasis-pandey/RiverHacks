@@ -109,7 +109,7 @@ importers:
         version: 1.3.1(next@15.2.4(@babel/core@7.28.4)(@opentelemetry/api@1.9.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)
       ai:
         specifier: latest
-        version: 5.0.60(zod@3.25.67)
+        version: 5.0.60(zod@3.25.76)
       autoprefixer:
         specifier: ^10.4.20
         version: 10.4.20(postcss@8.5.0)
@@ -188,12 +188,9 @@ importers:
       three:
         specifier: latest
         version: 0.180.0
-      vaul:
-        specifier: ^0.9.9
-        version: 0.9.9(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       zod:
-        specifier: 3.25.67
-        version: 3.25.67
+        specifier: 3.25.76
+        version: 3.25.76
     devDependencies:
       '@tailwindcss/postcss':
         specifier: ^4.1.9
@@ -4418,12 +4415,6 @@ packages:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
     engines: {node: '>= 0.8'}
 
-  vaul@0.9.9:
-    resolution: {integrity: sha512-7afKg48srluhZwIkaU+lgGtFCUsYBSGOl8vcc8N/M3YQlZFlynHD15AE+pwrYdc826o7nrIND4lL9Y6b9WWZZQ==}
-    peerDependencies:
-      react: ^16.8 || ^17.0 || ^18.0
-      react-dom: ^16.8 || ^17.0 || ^18.0
-
   victory-vendor@36.9.2:
     resolution: {integrity: sha512-PnpQQMuxlwYdocC8fIJqVXvkeViHYzotI+NJrCuav0ZYFoq912ZHBk3mCeuj+5/VpodOjPe1z0Fk2ihgzlXqjQ==}
 
@@ -4564,9 +4555,6 @@ packages:
     peerDependencies:
       zod: ^3.24.1
 
-  zod@3.25.67:
-    resolution: {integrity: sha512-idA2YXwpCdqUSKRCACDE6ItZD9TZzy3OZMtpfLoh6oPR47lipysRrJfjzMqFxQ3uJuUPyUeWe1r9vLH33xO/Qw==}
-
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
@@ -4607,19 +4595,19 @@ snapshots:
 
   '@0no-co/graphql.web@1.2.0': {}
 
-  '@ai-sdk/gateway@1.0.33(zod@3.25.67)':
+  '@ai-sdk/gateway@1.0.33(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.10(zod@3.25.67)
+  '@ai-sdk/provider-utils': 3.0.10(zod@3.25.76)
       '@vercel/oidc': 3.0.1
-      zod: 3.25.67
+    zod: 3.25.76
 
-  '@ai-sdk/provider-utils@3.0.10(zod@3.25.67)':
+  '@ai-sdk/provider-utils@3.0.10(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@standard-schema/spec': 1.0.0
       eventsource-parser: 3.0.6
-      zod: 3.25.67
+  zod: 3.25.76
 
   '@ai-sdk/provider@2.0.0':
     dependencies:
@@ -6912,13 +6900,13 @@ snapshots:
 
   agent-base@7.1.4: {}
 
-  ai@5.0.60(zod@3.25.67):
+  ai@5.0.60(zod@3.25.76):
     dependencies:
-      '@ai-sdk/gateway': 1.0.33(zod@3.25.67)
+      '@ai-sdk/gateway': 1.0.33(zod@3.25.76)
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.10(zod@3.25.67)
+      '@ai-sdk/provider-utils': 3.0.10(zod@3.25.76)
       '@opentelemetry/api': 1.9.0
-      zod: 3.25.67
+      zod: 3.25.76
 
   anser@1.4.10: {}
 
@@ -9371,15 +9359,6 @@ snapshots:
 
   vary@1.1.2: {}
 
-  vaul@0.9.9(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
-    dependencies:
-      '@radix-ui/react-dialog': 1.1.4(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      react: 19.0.0
-      react-dom: 19.0.0(react@19.0.0)
-    transitivePeerDependencies:
-      - '@types/react'
-      - '@types/react-dom'
-
   victory-vendor@36.9.2:
     dependencies:
       '@types/d3-array': 3.2.2
@@ -9496,7 +9475,7 @@ snapshots:
     dependencies:
       zod: 3.25.76
 
-  zod@3.25.67: {}
+  zod@3.25.76: {}
 
   zod@3.25.76: {}
 

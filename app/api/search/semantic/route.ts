@@ -18,17 +18,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid request", details: validation.error.errors }, { status: 400 })
     }
 
-    const { query, limit, similarityThreshold } = validation.data
+    const { query, limit, page, similarityThreshold, conversationId, role, sort } = validation.data
 
     // Generate embedding for search query
     const queryEmbedding = await generateEmbedding(query)
 
     // Perform semantic search
-    const results = await semanticSearch(user.id, queryEmbedding, limit, similarityThreshold)
+    const { results, total } = await semanticSearch(user.id, queryEmbedding, {
+      limit,
+      page,
+      similarityThreshold,
+      conversationId,
+      role,
+      sort,
+    })
+
+    const totalPages = total > 0 ? Math.ceil(total / limit) : 0
 
     return NextResponse.json({
       results,
       count: results.length,
+      total,
+      page,
+      limit,
+      totalPages,
     })
   } catch (error) {
     console.error("[v0] POST /api/search/semantic error:", error)

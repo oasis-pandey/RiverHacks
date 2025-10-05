@@ -12,8 +12,12 @@ export const createMessageSchema = z.object({
 
 export const semanticSearchSchema = z.object({
   query: z.string().min(1).max(1000),
-  limit: z.number().int().min(1).max(20).optional().default(5),
+  limit: z.number().int().min(1).max(50).optional().default(10),
+  page: z.number().int().min(1).optional().default(1),
   similarityThreshold: z.number().min(0).max(1).optional().default(0.7),
+  conversationId: z.string().uuid().optional(),
+  role: z.enum(["user", "assistant", "system"]).optional(),
+  sort: z.enum(["similarity", "recent"]).optional().default("similarity"),
 })
 
 export const generateEmbeddingSchema = z.object({
