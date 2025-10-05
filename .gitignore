@@ -1,60 +1,27 @@
-# Ignore EVERYTHING by default
-*
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# ==========================
-# ✅ Allow only essential project files
-# ==========================
+# dependencies
+/node_modules
 
-# Keep gitignore itself
-!.gitignore
+# next.js
+/.next/
+/out/
 
-# Keep Python source
-!*.py
-!*.json
+# production
+/build
 
-# Keep configuration and requirements
-!requirements.txt
-!setup.py
-!config.py
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
 
-# Keep documentation
-!*.md
-!docs/
-!README.md
+# env files
+.env*
 
-# Keep your engine and main project folders
-!bio_knowledge_engine/
-!bio_knowledge_engine/search/
-!agentic_rag/
-!agentic_rag/ingest/
-!agentic_rag/nodes/
-!agentic_rag/retrievers/
-!engine/
-!RiverHacks/
-!test.py
-!data/
-!data/corpus/
-!data/corpus/output.json
-!server/
-!server/core
-!server/api
-!server/api/routes/
-!scripts/
+# vercel
+.vercel
 
-# ==========================
-# 🚫 Still ignore heavy or sensitive stuff inside allowed folders
-# ==========================
-# Ignore virtual environments, data, and outputs
-venv/
-.env/
-*.pdf
-*.txt
-*.log
-*.csv
-*.tmp
-__pycache__/
-.cache/
-*.json
-
-# If you only want final JSONs tracked, comment out the line above and use:
-# !data/json/
+# typescript
+*.tsbuildinfo
+next-env.d.ts
