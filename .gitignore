@@ -38,6 +38,7 @@
 !server/
 !server/core
 !server/api
+!server/api/routes/
 !scripts/
 
 # ==========================
