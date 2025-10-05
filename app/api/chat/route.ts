@@ -85,7 +85,157 @@ export async function POST(request: NextRequest) {
       ...normalizedMessages,
     ]
 
-    // Call Gemini API
+    // If a HYBRID_CHAT_ENDPOINT is configured, call it with the RAG-style payload
+    const hybridEndpoint = process.env.HYBRID_CHAT_ENDPOINT
+    const hybridApiKey = process.env.HYBRID_CHAT_API_KEY
+
+    if (hybridEndpoint) {
+      try {
+        // Build a single text context combining system instruction, retrieved context, and recent messages
+        const conversationContext = [
+          systemInstruction,
+          contextText,
+          ...(normalizedMessages || []).map((m: any, idx: number) => `${m.role}: ${m.parts?.[0]?.text ?? ""}`),
+        ]
+          .filter(Boolean)
+          .join("\n\n")
+
+        const ragPayload: any = {
+          question: latestUserMessage?.content ?? "",
+          k: 6,
+          probes: 12,
+          web: {
+            google: true,
+            scholar: true,
+            scrape: false,
+            fetch_pdfs: false,
+            max_results: 3,
+          },
+          thread_id: "hybrid",
+          // common, easy-to-consume fields
+          system: systemInstruction,
+          context: conversationContext,
+          messages: normalizedMessages,
+          additionalProp1: {
+            systemInstruction,
+            contextText,
+            messages: normalizedMessages,
+          },
+        }
+
+        // Debug: log trimmed payload for diagnostics (no secrets)
+        try {
+          console.debug("[v0] Hybrid payload question:", ragPayload.question)
+          console.debug("[v0] Hybrid payload system length:", String(ragPayload.system).length)
+          console.debug("[v0] Hybrid payload context length:", String(ragPayload.context).length)
+        } catch (e) {
+          /* ignore logging errors */
+        }
+
+        // Log payload (trimmed) for debugging
+        try {
+          const safePayloadPreview = JSON.stringify({
+            question: String(ragPayload.question).slice(0, 500),
+            systemLength: String(ragPayload.system).length,
+            contextLength: String(ragPayload.context).length,
+          })
+          console.debug("[v0] Posting to hybrid endpoint:", safePayloadPreview)
+        } catch (e) {
+          /* ignore */
+        }
+
+        const hybridResp = await fetch(hybridEndpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(hybridApiKey ? { Authorization: `Bearer ${hybridApiKey}` } : {}),
+          },
+          body: JSON.stringify(ragPayload),
+        })
+
+        if (!hybridResp.ok) {
+          const errText = await hybridResp.text().catch(() => "")
+          console.error("[v0] Hybrid endpoint error:", hybridResp.status, errText)
+          throw new Error(`Hybrid endpoint error: ${hybridResp.status}`)
+        }
+
+        // Read a preview of the response for debugging (without consuming the full stream if possible)
+  const contentType = hybridResp.headers.get("content-type") || ""
+  if (hybridResp.body && contentType.includes("text")) {
+          // For text streams, read a small chunk and then recreate a stream for forwarding
+          const reader = hybridResp.body.getReader()
+          const decoder = new TextDecoder()
+          let preview = ""
+          let done = false
+          let chunks: Uint8Array[] = []
+
+          try {
+            while (!done && preview.length < 2000) {
+              const res = await reader.read()
+              done = !!res.done
+              if (res.value) {
+                chunks.push(res.value)
+                preview += decoder.decode(res.value, { stream: true })
+              }
+            }
+          } catch (e) {
+            console.warn("[v0] Error reading hybrid preview:", e)
+          }
+
+          // Log the preview (trimmed)
+          try {
+            console.debug("[v0] Hybrid response preview:", preview.slice(0, 2000))
+          } catch (e) {
+            /* ignore */
+          }
+
+          // Reconstruct a new stream that yields the chunks we've consumed + the rest from the original reader
+          const stream = new ReadableStream({
+            async start(controller) {
+              try {
+                for (const c of chunks) controller.enqueue(c)
+                if (!done) {
+                  // pump remaining data from the original reader
+                  while (true) {
+                    const r = await reader.read()
+                    if (r.done) break
+                    controller.enqueue(r.value)
+                  }
+                }
+                controller.close()
+              } catch (e) {
+                controller.error(e)
+              }
+            },
+          })
+
+          return new Response(stream, {
+            headers: {
+              "Content-Type": contentType || "text/plain; charset=utf-8",
+              "Cache-Control": "no-cache",
+              "Connection": "keep-alive",
+            },
+          })
+        }
+
+        // Otherwise, parse JSON/text and return as plain text
+        const respContentType = hybridResp.headers.get("content-type") || ""
+        if (respContentType.includes("application/json")) {
+          const json = await hybridResp.json()
+          // Try to extract a reasonable text field
+          const text = (json?.answer || json?.text || JSON.stringify(json)) as string
+          return new Response(text, { headers: { "Content-Type": "text/plain; charset=utf-8" } })
+        }
+
+        const text = await hybridResp.text()
+        return new Response(text, { headers: { "Content-Type": "text/plain; charset=utf-8" } })
+      } catch (error) {
+        console.error("[v0] Failed to call HYBRID_CHAT_ENDPOINT:", error)
+        return new Response("Hybrid endpoint error", { status: 502 })
+      }
+    }
+
+    // Fallback: call Gemini API
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
       console.error("[v0] GEMINI_API_KEY environment variable is missing")
