@@ -1,7 +1,9 @@
 import { SearchExperience } from "@/components/search/search-experience"
-import { spaceResources } from "@/lib/resources"
+import { listResources } from "@/lib/resources"
 
 export default async function SearchPage() {
+  const resources = await listResources()
+
   return (
     <main className="container mx-auto max-w-6xl px-6 pb-16 pt-10 md:px-8 md:pb-20 md:pt-14">
       <div className="space-y-8">
@@ -16,7 +18,7 @@ export default async function SearchPage() {
           </p>
         </div>
 
-        <SearchExperience resources={spaceResources} />
+        <SearchExperience resources={resources} />
       </div>
     </main>
   )

@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server"
 import { getCurrentUser } from "@/lib/auth"
+import { generateEmbedding, semanticSearch } from "@/lib/embeddings"
 
 // POST /api/chat - Chat endpoint using Gemini REST API
 export async function POST(request: NextRequest) {
@@ -9,7 +10,7 @@ export async function POST(request: NextRequest) {
       return new Response("Unauthorized", { status: 401 })
     }
 
-    const { messages } = await request.json()
+  const { messages } = await request.json()
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return new Response("Invalid messages", { status: 400 })
@@ -18,17 +19,70 @@ export async function POST(request: NextRequest) {
     // Build Gemini contents payload following REST quickstart format
     const systemInstruction = `You are a knowledgeable space biology expert. Help users understand astrobiology, space medicine, extremophiles, and life in space. Provide accurate, engaging, and educational responses.`
 
+    type RetrievedMessage = {
+      id: string
+      conversation_id: string
+      role: "user" | "assistant" | "system"
+      content: string
+      created_at: string
+      conversation_title: string
+      similarity: number
+    }
+
+    const latestUserMessage = [...messages]
+      .reverse()
+      .find((msg: any) => msg?.role === "user" && typeof msg.content === "string" && msg.content.trim().length > 0)
+
+    let retrievedContext: RetrievedMessage[] = []
+
+    if (latestUserMessage) {
+      try {
+        const queryEmbedding = await generateEmbedding(latestUserMessage.content)
+        const searchResult = await semanticSearch(user.id, queryEmbedding, {
+          limit: 6,
+          similarityThreshold: 0.72,
+          sort: "similarity",
+        })
+
+        retrievedContext = (searchResult.results ?? []) as RetrievedMessage[]
+      } catch (error) {
+        console.error("[v0] Failed to retrieve semantic context:", error)
+      }
+    }
+
+    const contextText =
+      retrievedContext.length > 0
+        ? [
+            "Here are relevant notes from your past chats. Use them when helpful:",
+            ...retrievedContext.slice(0, 6).map((item, index) => {
+              const timestamp = new Date(item.created_at).toISOString()
+              const similarity = item.similarity?.toFixed?.(2) ?? ""
+              return `${index + 1}. [${item.role.toUpperCase()} • ${item.conversation_title} • ${timestamp} • sim ${similarity}] ${item.content}`
+            }),
+          ].join("\n")
+        : ""
+
+    const normalizedMessages = messages
+      .filter((msg: any) => typeof msg?.content === "string" && msg.content.trim().length > 0)
+      .map((msg: any) => ({
+        role: msg.role === "assistant" ? "model" : "user",
+        parts: [{ text: msg.content }],
+      }))
+
     const contents = [
       {
         role: "user",
         parts: [{ text: systemInstruction }],
       },
-      ...messages
-        .filter((msg: any) => typeof msg?.content === "string" && msg.content.trim().length > 0)
-        .map((msg: any) => ({
-          role: msg.role === "assistant" ? "model" : "user",
-          parts: [{ text: msg.content }],
-        })),
+      ...(contextText
+        ? [
+            {
+              role: "user" as const,
+              parts: [{ text: contextText }],
+            },
+          ]
+        : []),
+      ...normalizedMessages,
     ]
 
     // Call Gemini API
