@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
+from dotenv import load_dotenv
 import json
 import re
+
 from typing import Optional, Dict, Any
 
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -13,22 +15,25 @@ from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmb
 
 
 import sys
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.dirname(os.path.abspath(__file__))) 
 from serpapi_search import fetch_scholar_results, build_structured_response
 
 app = Flask(__name__)
 CORS(app)  
+load_dotenv()
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+
 if not GOOGLE_API_KEY:
     raise ValueError("GOOGLE_API_KEY environment variable is required")
 
 DATABASE_URL = os.getenv("DATABASE_URL")
+
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL environment variable is required")
 
 EMBED_MODEL = os.getenv("EMBED_MODEL", "models/embedding-001")
 COLLECTION = os.getenv("COLLECTION_NAME", "nasa_docs")
-LLM_MODEL = os.getenv("LLM_MODEL", "gemini-1.5-flash")
+LLM_MODEL = os.getenv("LLM_MODEL", "gemini-2.5-pro")
 
 
 embeddings = GoogleGenerativeAIEmbeddings(
